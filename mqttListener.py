@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import time
 import http.client
 import json
+import subprocess
 
 
 def HandleCommand(object, command):
@@ -11,9 +12,14 @@ def HandleCommand(object, command):
 		commands=data["commands"]
 		if object in commands and command in commands[object]:
 			for each in commands[object][command]:
-				print (each['host'],each['url'])
-				conn=http.client.HTTPConnection(each['host'])
-				conn.request(url=each['url'], method="GET")
+				commandType=each['type']
+				if commandType=="http":
+					print (each['host'],each['url'])
+					conn=http.client.HTTPConnection(each['host'])
+					conn.request(url=each['url'], method="GET")
+				if commandType=="lirc":
+					print (each['irc_send'])
+					subprocess.call(["irsend", "SEND_ONCE", each['irc_send']['remote'], each['irc_send']['command']])
 
 	
 
