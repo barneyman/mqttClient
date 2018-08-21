@@ -3,23 +3,33 @@ import time
 import http.client
 import json
 import subprocess
+from bjfHA import bjfHA
 
 
 def HandleCommand(object, command):
 	data = json.load(open('config.json'))
+	myHA=bjfHA('/home/pi/HA/config.json')
 	print(object, command)
 	if "commands" in data:
 		commands=data["commands"]
 		if object in commands and command in commands[object]:
-			for each in commands[object][command]:
-				commandType=each['type']
-				if commandType=="http":
-					print (each['host'],each['url'])
-					conn=http.client.HTTPConnection(each['host'])
-					conn.request(url=each['url'], method="GET")
-				if commandType=="lirc":
-					print (each['irc_send'])
-					subprocess.call(["irsend", "SEND_ONCE", each['irc_send']['remote'], each['irc_send']['command']])
+			# work out if it's a mood or a command
+			if 'mood' in commands[object][command]:
+				myHA.setMood(commands[object][command]['mood'])
+			else:
+				# iterate thru commands
+				for each in commands[object][command]['commands']:
+					myHA.sendCommand(each['device'],each['command'])
+
+			#for each in commands[object][command]:
+			#	commandType=each['type']
+			#	if commandType=="http":
+			#		print (each['host'],each['url'])
+			#		conn=http.client.HTTPConnection(each['host'])
+			#		conn.request(url=each['url'], method="GET")
+			#	if commandType=="lirc":
+			#		print (each['irc_send'])
+			#		subprocess.call(["irsend", "SEND_ONCE", each['irc_send']['remote'], each['irc_send']['command']])
 
 	
 
